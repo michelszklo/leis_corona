@@ -1,4 +1,4 @@
-# Scraping:
+# Scrapping:
 # Leis municipais e estaduais a respeito do novo Coronavírus (COVID-19)
 
 #  https://leismunicipais.com.br/coronavirus
@@ -25,7 +25,7 @@ if(length(to_install)>0) install.packages(to_install)
 
 lapply(packages,require,character.only=TRUE)
 
-# web site to be scraped
+# web site to be scrapped
 site <- httr::GET("https://leismunicipais.com.br/coronavirus")
 
 # =================================================================
@@ -39,7 +39,6 @@ tabela_mun <- httr::content(site, encoding = "UTF-8") %>%
   trimws()
 
 df_mun <- as.data.frame(matrix (data= tabela_mun, ncol = 2, byrow = T))
-df_mun <- df_mun %>% mutate(V2 = gsub("\n                                        ","",V2))
 
 tabela_lei <- httr::content(site, encoding = "UTF-8") %>%
   rvest::html_nodes(xpath = '//*[@id="tabela_leis_municipais"]/tbody/tr/td/a') %>%
@@ -69,7 +68,7 @@ df <- df %>%
 
 
 # save as csv
-write.csv2(df, "leis_mun.csv", row.names = F)
+write.csv(df, "leis_mun.csv")
 
 # =================================================================
 # 2. Scraping Estados
@@ -82,7 +81,6 @@ tabela_estado <- httr::content(site, encoding = "UTF-8") %>%
   trimws()
 
 df_estado <- as.data.frame(matrix (data= tabela_estado, ncol = 2, byrow = T))
-df_estado <- df_estado %>% mutate(V2 = gsub("\n                                        ","",V2))
 
 tabela_lei <- httr::content(site, encoding = "UTF-8") %>%
   rvest::html_nodes(xpath = '//*[@id="tabela_leis_estaduais"]/tbody/tr/td/a') %>%
@@ -107,9 +105,9 @@ colnames(df) <- c("estado","lei","desc","link")
 
 
 df <- df %>% 
-  mutate(estado = as.character(estado), lei = as.character(lei), desc = as.character(desc), link = as.character(link)) %>% 
+  mutate(estadp = as.character(estado), lei = as.character(lei), desc = as.character(desc), link = as.character(link)) %>% 
   mutate(desc = substr(desc, nchar(lei) + 1, nchar(desc)))
 
 
 # save as csv
-write.csv2(df, "leis_estado.csv",row.names = F)
+write.csv(df, "leis_estado.csv")

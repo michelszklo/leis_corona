@@ -12,14 +12,14 @@
     "path" : null,
     "project_path" : null,
     "properties" : {
-        "cacheKey" : "BE20FA1D",
+        "cacheKey" : "E67C5140",
         "caption" : "df_estado",
-        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=df_estado&cache_key=BE20FA1D",
-        "displayedObservations" : "464",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=df_estado&cache_key=E67C5140",
+        "displayedObservations" : "431",
         "environment" : "",
         "object" : "df_estado",
         "preview" : "0",
-        "totalObservations" : "464",
+        "totalObservations" : "431",
         "variables" : "2"
     },
     "relative_order" : 3,
