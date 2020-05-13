@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1588979456535.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1506981771",
+    "id" : "85867DD",
+    "lastKnownWriteTime" : 1589386783,
+    "last_content_update" : 1589386783,
+    "path" : "~/GitHub/leis_corona/scraping.R",
+    "project_path" : "scraping.R",
+    "properties" : {
+        "cursorPosition" : "27,22",
+        "scrollLine" : "12",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
