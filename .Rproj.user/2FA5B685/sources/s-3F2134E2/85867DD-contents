@@ -1,4 +1,4 @@
-# Scrapping:
+# Scraping:
 # Leis municipais e estaduais a respeito do novo Coronavírus (COVID-19)
 
 #  https://leismunicipais.com.br/coronavirus
@@ -25,7 +25,7 @@ if(length(to_install)>0) install.packages(to_install)
 
 lapply(packages,require,character.only=TRUE)
 
-# web site to be scrapped
+# web site to be scraped
 site <- httr::GET("https://leismunicipais.com.br/coronavirus")
 
 # =================================================================
