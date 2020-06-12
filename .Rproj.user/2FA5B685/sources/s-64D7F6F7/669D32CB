@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1592005821843.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "669D32CB",
+    "lastKnownWriteTime" : 1592003842,
+    "last_content_update" : 1592005821843,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "C3C650A0",
+        "caption" : "npi",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=npi&cache_key=C3C650A0",
+        "displayedObservations" : 95,
+        "environment" : "",
+        "object" : "npi",
+        "preview" : 0,
+        "totalObservations" : 95,
+        "variables" : 2
+    },
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

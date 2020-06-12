@@ -1,0 +1,91 @@
+# Classifying "leis e decretos" into NPIs:
+# Leis municipais e estaduais a respeito do novo Coronavírus (COVID-19)
+
+#  https://leismunicipais.com.br/coronavirus
+
+# Author: Michel Szklo
+# Date:  May-2020
+
+##########################################################################
+
+
+# =================================================================
+# 0. Set-up
+# =================================================================
+
+rm(list=ls())
+
+# packages
+packages<-c('dplyr','httr','rvest','tidyr','textclean','foreach','doParallel','doSNOW')
+
+to_install<-packages[!(packages %in% installed.packages()[,"Package"])]
+if(length(to_install)>0) install.packages(to_install)
+
+lapply(packages,require,character.only=TRUE)
+
+
+df_mun <- read.csv("leis_mun.csv", sep = ";")
+df_estado <- read.csv("leis_estado.csv", sep = ";")
+
+
+cluster = parallel::makeCluster(detectCores() - 1)
+doSNOW::registerDoSNOW(cluster)
+
+options(max.print=1000000)
+
+# =================================================================
+# 1. Locating laws and decree that relates to the closure of schools 
+# =================================================================
+
+df_estado <- df_estado %>% 
+  mutate(desc = tolower(desc)) %>% 
+  filter(lei_ord == 1 | decreto == 1)
+
+links <- as.character(df_estado$link)
+
+site <- httr::GET('https://leisestaduais.com.br/sc/lei-ordinaria-n-17945-2020-santa-catarina-dispoe-sobre-a-transparencia-nos-contratos-emergenciais-firmados-pela-administracao-publica-estadual-em-razao-da-vigencia-do-estado-de-calamidade-publica-em-decorrencia-do-coronavirus-covid-19')
+content <- httr::content(site, encoding = "UTF-8", as = "text") %>%
+  rvest::html_nodes('#lei') %>%
+  rvest::html_text() %>%
+  trimws()
+
+//*[@id="lei"]/h1/text()
+//*[@id="lei"]/text()[2]
+//*[@id="lei"]/text()[3]
+
+pb <- txtProgressBar(max=100, style=3)<br>
+progress <- function(n) setTxtProgressBar(pb, n)
+opts <- list(progress=progress)
+r <- foreach(i=1:100, .options.snow=opts) %dopar% {
+  Sys.sleep(1)
+  sqrt(i)
+}
+close(pb)
+
+
+
+
+
+GET /pe/decreto-n-49045-2020-pernambuco-autoriza-a-contratacao-temporaria-de-pessoal-para-no-ambito-da-secretaria-de-saude-atender-a-situacao-de-excepcional-interesse-publico HTTP/1.1
+Host: leisestaduais.com.br
+Connection: keep-alive
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Referer: https://leisestaduais.com.br/pe/decreto-n-49045-2020-pernambuco-autoriza-a-contratacao-temporaria-de-pessoal-para-no-ambito-da-secretaria-de-saude-atender-a-situacao-de-excepcional-interesse-publico
+Accept-Encoding: gzip, deflate, br
+Accept-Language: pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7
+Cookie: liz={"isAnonymous":true,"closedBtnDestacado":true}; mojolicious=eyJleHBpcmVzIjoxNTkwODcyNzcyLCJzb2x2ZWQiOjE1OTA4Njk0NzJ9--488d4ad2c354161aa2ff46c8e8c86757772cc050
+
+
+
+
+
+
+
+
+
