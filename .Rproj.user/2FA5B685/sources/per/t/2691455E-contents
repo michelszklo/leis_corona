@@ -42,6 +42,7 @@ site <- httr::GET("https://leismunicipais.com.br/coronavirus")
 # =================================================================
 
 # extracting infos from html table
+# -----------------------------------------------------------------
 tabela_mun <- httr::content(site, encoding = "UTF-8") %>%
   rvest::html_nodes(xpath = '//*[@id="tabela_leis_municipais"]/tbody/tr/td') %>%
   rvest::html_text() %>%
@@ -68,6 +69,7 @@ df_link <- as.data.frame(matrix (data= tabela_link, ncol = 1, byrow = T))
 
 
 # consolidating dataframe
+# -----------------------------------------------------------------
 df_mun <- bind_cols(df_mun,df_lei,df_link)
 df_mun <- df_mun[c(1,3,2,4)]
 colnames(df_mun) <- c("mun","lei","desc","link")
@@ -76,7 +78,8 @@ df_mun <- df_mun %>%
   mutate(mun = as.character(mun), lei = as.character(lei), desc = as.character(desc), link = as.character(link)) %>% 
   mutate(desc = substr(desc, nchar(lei) + 1, nchar(desc)), UF = substr(mun, nchar(mun) - 1, nchar(mun)), mun = substr(mun, 1, nchar(mun)-3))
 
-
+# creating variables for "types of law"
+# -----------------------------------------------------------------
 df_mun <- within(df_mun, lei_ord <- grepl("Lei",df_mun$lei))
 df_mun <- within(df_mun, ata <- grepl("Ata",df_mun$lei))
 df_mun <- within(df_mun, decreto <- grepl("Decreto",df_mun$lei))
@@ -85,47 +88,68 @@ df_mun <- within(df_mun, oficio <- grepl("Ofício",df_mun$lei))
 df_mun <- within(df_mun, portaria <- grepl("Portaria",df_mun$lei))
 df_mun <- within(df_mun, resolucao <- grepl("Resolução",df_mun$lei))
 
-df_mun <- within(df_mun, jan <- grepl("janeiro",df_mun$lei))
-df_mun <- within(df_mun, fev <- grepl("fevereiro",df_mun$lei))
-df_mun <- within(df_mun, mar <- grepl("março",df_mun$lei))
-df_mun <- within(df_mun, abr <- grepl("abril",df_mun$lei))
-df_mun <- within(df_mun, mai <- grepl("maio",df_mun$lei))
-df_mun <- within(df_mun, jun <- grepl("junho",df_mun$lei))
+
+# creating variables to identify month
+# -----------------------------------------------------------------
+df_mun <- within(df_mun, janeiro <- grepl("janeiro",df_mun$lei))
+df_mun <- within(df_mun, fevereiro <- grepl("fevereiro",df_mun$lei))
+df_mun <- within(df_mun, marco <- grepl("março",df_mun$lei))
+df_mun <- within(df_mun, abril <- grepl("abril",df_mun$lei))
+df_mun <- within(df_mun, maio <- grepl("maio",df_mun$lei))
+df_mun <- within(df_mun, junho <- grepl("junho",df_mun$lei))
+df_mun <- within(df_mun, julho <- grepl("julho",df_mun$lei))
+df_mun <- within(df_mun, agosto <- grepl("agosto",df_mun$lei))
+df_mun <- within(df_mun, setembro <- grepl("setembro",df_mun$lei))
+df_mun <- within(df_mun, outubro <- grepl("outubro",df_mun$lei))
+df_mun <- within(df_mun, novembro <- grepl("novembro",df_mun$lei))
+df_mun <- within(df_mun, dezembro <- grepl("dezembro",df_mun$lei))
 
 
 df_mun <- lapply(df_mun, function(x) gsub("FALSE","0",x))
 df_mun <- lapply(df_mun, function(x) gsub("TRUE","1",x))
 
-df_mun[6:18] <- lapply(df_mun[6:18], function(x) as.numeric(x))
+df_mun[6:24] <- lapply(df_mun[6:24], function(x) as.numeric(x))
 df_mun <- as.data.frame(df_mun)
 
+
+# extracting date from law title
+# -----------------------------------------------------------------
+month <- colnames(df_mun)[13:24]
 df_mun <- df_mun %>%
+  pivot_longer(cols = all_of(month),
+               names_to = "mes",
+               values_to = "check") %>% 
+  filter(check==1) %>% 
+  select(-check) %>%
   mutate(lei = as.character(lei)) %>% 
-  mutate(data = ifelse(jan==1,
-                       substr(lei, nchar(lei)-20, nchar(lei)),
-                       ifelse(fev==1,
-                              substr(lei, nchar(lei)-22, nchar(lei)),
-                              ifelse(mar==1,
-                                     substr(lei,nchar(lei)-18,nchar(lei)),
-                                     ifelse(abr==1,
-                                            substr(lei,nchar(lei)-18,nchar(lei)),
-                                            ifelse(mai==1,
-                                                   substr(lei,nchar(lei)-17,nchar(lei)),
-                                                   ifelse(jun==1,
-                                                          substr(lei,nchar(lei)-18,nchar(lei)),"")))))))
-df_mun <- df_mun %>% 
+  mutate(data = substr(lei, nchar(lei) - (nchar(mes) + 13), nchar(lei))) %>%
   mutate(dia = ifelse(substr(data,1,1)==" ",substr(data,2,2),substr(data,1,2)))
 
-df_mun <- pivot_longer(df_mun,
-                       cols = c("jan","fev","mar","abr","mai","jun"),
-                       names_to = "mes")
-df_mun <- df_mun %>% filter(value==1)
-df_mun <- df_mun %>% mutate(mes = ifelse(mes=="jan","1",ifelse(mes=="fev","2",ifelse(mes=="mar","3",ifelse(mes=="abr","4",ifelse(mes=="mai","5",ifelse(mes=="jun","6","")))))))
+month_map <- rbind(
+  c('janeiro','1'),
+  c('fevereiro','2'),
+  c('marco','3'),
+  c('abril','4'),
+  c('maio','5'),
+  c('junho','6'),
+  c('julho','7'),
+  c('agosto','8'),
+  c('setembro','9'),
+  c('outubro','10'),
+  c('novembro','11'),
+  c('dezembro','12')
+)
+
+for (i in 1:nrow(month_map)){
+  name <- month_map[i,1]
+  num <- month_map[i,2]
+  df_mun <- df_mun %>% mutate(mes = ifelse(mes==name,num,mes))
+}
 
 df_mun <- df_mun %>%
   mutate(data = paste0("2020-",mes,"-",dia)) %>%
   mutate(data = as.Date(data, format = c("%Y-%m-%d"))) %>%
-  select(-c("dia","mes","value"))
+  select(-c("dia","mes"))
 
 
 
@@ -134,6 +158,7 @@ df_mun <- df_mun %>%
 # =================================================================
 
 # extracting infos from html table
+# -----------------------------------------------------------------
 tabela_estado <- httr::content(site, encoding = "UTF-8") %>%
   rvest::html_nodes(xpath = '//*[@id="tabela_leis_estaduais"]/tbody/tr/td') %>%
   rvest::html_text() %>%
@@ -159,6 +184,7 @@ df_link <- as.data.frame(matrix (data= tabela_link, ncol = 1, byrow = T))
 
 
 # consolidating dataframe
+# -----------------------------------------------------------------
 df_estado <- bind_cols(df_estado,df_lei,df_link)
 df_estado <- df_estado[c(1,3,2,4)]
 colnames(df_estado) <- c("estado","lei","desc","link")
@@ -168,6 +194,9 @@ df_estado <- df_estado %>%
   mutate(estado = as.character(estado), lei = as.character(lei), desc = as.character(desc), link = as.character(link)) %>% 
   mutate(desc = substr(desc, nchar(lei) + 1, nchar(desc)))
 
+
+# creating variables for "types of law"
+# -----------------------------------------------------------------
 df_estado <- within(df_estado, lei_ord <- grepl("Lei",df_estado$lei))
 df_estado <- within(df_estado, ata <- grepl("Ata",df_estado$lei))
 df_estado <- within(df_estado, decreto <- grepl("Decreto",df_estado$lei))
@@ -176,47 +205,67 @@ df_estado <- within(df_estado, oficio <- grepl("Ofício",df_estado$lei))
 df_estado <- within(df_estado, portaria <- grepl("Portaria",df_estado$lei))
 df_estado <- within(df_estado, resolucao <- grepl("Resolução",df_estado$lei))
 
-df_estado <- within(df_estado, jan <- grepl("janeiro",df_estado$lei))
-df_estado <- within(df_estado, fev <- grepl("fevereiro",df_estado$lei))
-df_estado <- within(df_estado, mar <- grepl("março",df_estado$lei))
-df_estado <- within(df_estado, abr <- grepl("abril",df_estado$lei))
-df_estado <- within(df_estado, mai <- grepl("maio",df_estado$lei))
-df_estado <- within(df_estado, jun <- grepl("junho",df_estado$lei))
+
+# creating variables to identify month
+# -----------------------------------------------------------------
+df_estado <- within(df_estado, janeiro <- grepl("janeiro",df_estado$lei))
+df_estado <- within(df_estado, fevereiro <- grepl("fevereiro",df_estado$lei))
+df_estado <- within(df_estado, marco <- grepl("março",df_estado$lei))
+df_estado <- within(df_estado, abril <- grepl("abril",df_estado$lei))
+df_estado <- within(df_estado, maio <- grepl("maio",df_estado$lei))
+df_estado <- within(df_estado, junho <- grepl("junho",df_estado$lei))
+df_estado <- within(df_estado, julho <- grepl("julho",df_estado$lei))
+df_estado <- within(df_estado, agosto <- grepl("agosto",df_estado$lei))
+df_estado <- within(df_estado, setembro <- grepl("setembro",df_estado$lei))
+df_estado <- within(df_estado, outubro <- grepl("outubro",df_estado$lei))
+df_estado <- within(df_estado, novembro <- grepl("novembro",df_estado$lei))
+df_estado <- within(df_estado, dezembro <- grepl("dezembro",df_estado$lei))
 
 
 df_estado <- lapply(df_estado, function(x) gsub("FALSE","0",x))
 df_estado <- lapply(df_estado, function(x) gsub("TRUE","1",x))
 
-df_estado[5:17] <- lapply(df_estado[5:17], function(x) as.numeric(x))
+df_estado[5:23] <- lapply(df_estado[5:23], function(x) as.numeric(x))
 df_estado <- as.data.frame(df_estado)
 
+# extracting date from law title
+# -----------------------------------------------------------------
+month <- colnames(df_estado)[12:23]
 df_estado <- df_estado %>%
+  pivot_longer(cols = all_of(month),
+               names_to = "mes",
+               values_to = "check") %>% 
+  filter(check==1) %>% 
+  select(-check) %>%
   mutate(lei = as.character(lei)) %>% 
-  mutate(data = ifelse(jan==1,
-                       substr(lei, nchar(lei)-20, nchar(lei)),
-                       ifelse(fev==1,
-                              substr(lei, nchar(lei)-22, nchar(lei)),
-                              ifelse(mar==1,
-                                     substr(lei,nchar(lei)-18,nchar(lei)),
-                                     ifelse(abr==1,
-                                            substr(lei,nchar(lei)-18,nchar(lei)),
-                                            ifelse(mai==1,
-                                                   substr(lei,nchar(lei)-17,nchar(lei)),
-                                                   ifelse(jun==1,
-                                                          substr(lei,nchar(lei)-18,nchar(lei)),"")))))))
-df_estado <- df_estado %>% 
+  mutate(data = substr(lei, nchar(lei) - (nchar(mes) + 13), nchar(lei))) %>%
   mutate(dia = ifelse(substr(data,1,1)==" ",substr(data,2,2),substr(data,1,2)))
 
-df_estado <- pivot_longer(df_estado,
-                          cols = c("jan","fev","mar","abr","mai","jun"),
-                          names_to = "mes")
-df_estado <- df_estado %>% filter(value==1)
-df_estado <- df_estado %>% mutate(mes = ifelse(mes=="jan","1",ifelse(mes=="fev","2",ifelse(mes=="mar","3",ifelse(mes=="abr","4",ifelse(mes=="mai","5",ifelse(mes=="jun","6","")))))))
+month_map <- rbind(
+  c('janeiro','1'),
+  c('fevereiro','2'),
+  c('marco','3'),
+  c('abril','4'),
+  c('maio','5'),
+  c('junho','6'),
+  c('julho','7'),
+  c('agosto','8'),
+  c('setembro','9'),
+  c('outubro','10'),
+  c('novembro','11'),
+  c('dezembro','12')
+)
+
+for (i in 1:nrow(month_map)){
+  name <- month_map[i,1]
+  num <- month_map[i,2]
+  df_estado <- df_estado %>% mutate(mes = ifelse(mes==name,num,mes))
+}
 
 df_estado <- df_estado %>%
   mutate(data = paste0("2020-",mes,"-",dia)) %>%
   mutate(data = as.Date(data, format = c("%Y-%m-%d"))) %>%
-  select(-c("dia","mes","value"))
+  select(-c("dia","mes"))
 
 
 
@@ -226,7 +275,6 @@ df_estado <- df_estado %>%
 
 # MUNICIPIOS
 # -----------------------------------------------------------------
-
 
 df_mun <- df_mun %>% 
   mutate(mun_merge = replace_non_ascii(gsub("-","",gsub("'","",gsub(" ","",tolower(mun))))))
@@ -245,7 +293,6 @@ df_mun <- left_join(df_mun, id_mun, by = "mun_merge")
 
 df_mun <- df_mun %>% dplyr::select(-mun_merge) %>% rename(codmun = id_munic_6)
 
-
 # ESTADOS
 # -----------------------------------------------------------------
 
@@ -255,7 +302,6 @@ colnames(id_estado)[3] <- "estado"
 
 
 df_estado <- left_join(df_estado, id_estado, by = "estado")
-
 
 
 
